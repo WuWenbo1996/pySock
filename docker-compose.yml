@@ -1,0 +1,37 @@
+version: '3'
+services:
+  stDataRecv:
+    build: .
+    container_name: stDataRecv
+    user: root
+    ports:
+      - 10001:10001
+    volumes:
+      -
+    depends_on:
+      - mysql
+    restart: always
+
+  stDataService:
+    build: .
+    container_name: stDataService
+    user: root
+    ports:
+      - 5000:5000
+    volumes:
+      -
+    depends_on:
+      - mysql
+    restart: always
+
+  mysql:
+    build: .
+    container_name: stMysql
+    user: root
+    environment:
+      - MYSQL_PASSWORD=123456
+    prots:
+      - 3306:3306
+    volumes:
+      -
+    restart: always
