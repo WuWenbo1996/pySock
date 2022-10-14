@@ -1,37 +1,51 @@
 version: '3'
 services:
-  stDataRecv:
-    build: .
-    container_name: stDataRecv
+  data_service:
+    build:
+      context: ./src/
+      dockerfile: Dockerfile
+    container_name: data_service
     user: root
     ports:
       - 10001:10001
-    volumes:
-      -
-    depends_on:
-      - mysql
-    restart: always
-
-  stDataService:
-    build: .
-    container_name: stDataService
-    user: root
-    ports:
       - 5000:5000
     volumes:
-      -
-    depends_on:
-      - mysql
+      - ./src/run.py:/usr/src/run.py
+    # depends_on:
+    #   - mysql
+    privileged: true
     restart: always
 
-  mysql:
-    build: .
-    container_name: stMysql
-    user: root
-    environment:
-      - MYSQL_PASSWORD=123456
-    prots:
-      - 3306:3306
-    volumes:
-      -
-    restart: always
+  # stDataService:
+  #   build: dataService
+  #   container_name: stDataService
+  #   user: root
+  #   ports:
+  #     - 5000:5000
+  #   volumes:
+  #     - ../dataService:/usr/src
+  #   depends_on:
+  #     - mysql
+  #   privileged: true
+  #   restart: always
+
+  # mysql:
+  #   build:
+  #     context: ./mysql
+  #     dockerfile: Dockerfile
+  #   container_name: stMysql
+  #   user: root
+  #   ports:
+  #     - 3307:3306
+  #   environment:
+  #     - TZ=Asia/Shanghai
+  #     - MYSQL_ROOT_PASSWORD=123456
+  #   volumes:
+  #     - ./mysql/data:/var/lib/mysql
+  #     - ./mysql/conf.d:/etc/mysql/conf.d
+  #     - ./mysql/logs:/var/log/mysql
+  #   command:
+  #     --character-set-server=utf8mb4
+  #     --collation-server=utf8mb4_general_ci
+  #   privileged: true
+  #   restart: always
