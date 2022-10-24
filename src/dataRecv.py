@@ -10,6 +10,7 @@ import binascii
 
 BUFSIZE = 1024
 
+
 class Thread_recv_data(threading.Thread):
     def __init__(self, host, port, db_user, db_pwd):
         super().__init__()
@@ -25,9 +26,9 @@ class Thread_recv_data(threading.Thread):
 
     def create_socket(self):
         try:
-            self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP连接
         except socket.error as msg:
-            print('Failed to create socket. Error message: ' , msg)
+            print('Failed to create socket. Error message: ', msg)
             sys.exit()
 
         print('socket created')
@@ -36,15 +37,17 @@ class Thread_recv_data(threading.Thread):
         try:
             self.server.bind((self.host, self.port))
         except socket.error as msg:
-            print('Bind failed. Error msg:' , msg)
+            print('Bind failed. Error msg:', msg)
             sys.exit()
 
         print('socket bind complete')
 
-    def sql_saving(self, key, val):
+    def sql_saving(self, created, data):
         db = pymysql.connect(host='', user=self.db_user, password=self.db_pwd, database="cabletemp")
         cursor = db.cursor()
-        sql = "INSERT INTO `test` (`create_time`, `data`) VALUES ()"
+
+        sql = f"""INSERT INTO data_result(Created, data) 
+                    VALUES ('{created}','{data}')"""  # 列
         try:
             # 执行sql语句
             cursor.execute(sql)
@@ -60,13 +63,15 @@ class Thread_recv_data(threading.Thread):
         self.bind_socket()
 
         # Function for handling connections. This will be used to create threads
-        while True:
+        while True:  # 第3步需要改进的地方：  接收独立，不再使用while Ture循环等待，改成kafka消息队列
             # 获取数据的发送终端地址以及收到的数据
             self.recv_msg, self.client_addr = self.server.recvfrom(BUFSIZE)
 
-            self.localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-            print(str(self.recv_msg, 'utf-8'))
+            # 存储信息
+            self.sql_saving(localtime, self.recv_msg)
+            # print(str(self.recv_msg, 'utf-8'))  # test
 
         self.server.close()
 
@@ -74,3 +79,4 @@ class Thread_recv_data(threading.Thread):
 if __name__ == '__main__':
     thread_data = Thread_recv_data(host='', port=10001, db_user='gaoya', db_pwd='gaoya')
     thread_data.start()
+
