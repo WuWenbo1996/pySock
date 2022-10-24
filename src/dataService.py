@@ -1,10 +1,15 @@
 from flask.json import JSONEncoder
 from flask import Flask, jsonify, request
+import pymysql
 import json
 from datetime import datetime, date
 from gevent import pywsgi
 
-# Fomart change of time
+
+# Format change of time
+from pymysql.cursors import DictCursor
+
+
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
@@ -14,9 +19,12 @@ class CustomJSONEncoder(JSONEncoder):
         else:
             return JSONEncoder.default(self, obj)
 
+
 # Interface to front end
 app = Flask(__name__)
 app.json_encoder = CustomJSONEncoder
+
+
 @app.route('/', methods=['post'])
 def get_data():
     # Judge Input is json
@@ -30,7 +38,7 @@ def get_data():
 
     # Connect to db
     db = pymysql.connect(host='', user='gaoya', password='gaoya', database="cabletemp")
-    cursor = db.cursor()
+    cursor = db.cursor(DictCursor)  # 使返回的查询结果变为字典形式，而不是元组形式。
     feedBacks = {'data': []}
 
     # Start query
@@ -40,11 +48,13 @@ def get_data():
         cursor.execute(sql)
         # 获取所有记录列表
         results = cursor.fetchall()
-        for row in results:
-            # Generate json record
-            feedBack = {}
-
-            feedBacks['data'].append(feedBack)
+        for row in results:  # 处理
+            if row['data'] is not None and row['data'] != '':
+                # Generate json record
+                feedBack = row
+                # feedBack = {'data': row['data'], 'Created': row['Created']}  # 什么样的数据形式？？
+                # json，
+                feedBacks['data'].append(feedBack)
     except:
         print("Error: unable to fetch data")
 
@@ -53,7 +63,8 @@ def get_data():
     return jsonify(feedBacks)
 
 
-if __name__ == '__main__':
-    # server = pywsgi.WSGIServer(('0.0.0.0', 5088), app)
-    # server.serve_forever()
-    # app.run(host='0.0.0.0', port=5088, debug=False)#
+if __name__ == '__main__':  #
+
+    server = pywsgi.WSGIServer(('0.0.0.0', 5088), app)  # 5088
+    server.serve_forever()
+    app.run(host='0.0.0.0', port=5088, debug=False)  # 测试开关
