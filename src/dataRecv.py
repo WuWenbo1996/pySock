@@ -1,12 +1,10 @@
 import socket
 import sys
 import time
-import csv
 import pymysql
 
 import threading
 
-import binascii
 
 BUFSIZE = 1024
 
@@ -46,16 +44,19 @@ class Thread_recv_data(threading.Thread):
         db = pymysql.connect(host='', user=self.db_user, password=self.db_pwd, database="cabletemp")
         cursor = db.cursor()
 
-        sql = f"""INSERT INTO data_result(Created, data) 
-                    VALUES ('{created}','{data}')"""  # 列
+        sql = "INSERT INTO data_result (Created, data) VALUES " + "('" + created + "','" + str(data, 'utf-8') + "');"  # 列
+        # 如果数据data转换成字符串形式str(data, 'utf-8')，可以存储。
+        print(sql)
         try:
             # 执行sql语句
             cursor.execute(sql)
             # 提交到数据库执行
             db.commit()
+            print('sql commit')
         except:
             # 如果发生错误则回滚
             db.rollback()
+            print('sql rollback')
         db.close()
 
     def run(self):
@@ -68,10 +69,9 @@ class Thread_recv_data(threading.Thread):
             self.recv_msg, self.client_addr = self.server.recvfrom(BUFSIZE)
 
             localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-
             # 存储信息
             self.sql_saving(localtime, self.recv_msg)
-            # print(str(self.recv_msg, 'utf-8'))  # test
+            print(str(self.recv_msg, 'utf-8'))  # test
 
         self.server.close()
 
