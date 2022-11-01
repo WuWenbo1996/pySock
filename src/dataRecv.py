@@ -46,17 +46,16 @@ class Thread_recv_data(threading.Thread):
 
         sql = "INSERT INTO data_result (Created, data) VALUES " + "('" + created + "','" + str(data, 'utf-8') + "');"  # 列
         # 如果数据data转换成字符串形式str(data, 'utf-8')，可以存储。
-        print(sql)
         try:
             # 执行sql语句
             cursor.execute(sql)
             # 提交到数据库执行
             db.commit()
-            print('sql commit')
+            # print('sql commit')
         except:
             # 如果发生错误则回滚
             db.rollback()
-            print('sql rollback')
+            # print('sql rollback')
         db.close()
 
     def run(self):
@@ -66,12 +65,13 @@ class Thread_recv_data(threading.Thread):
         # Function for handling connections. This will be used to create threads
         while True:  # 第3步需要改进的地方：  接收独立，不再使用while Ture循环等待，改成kafka消息队列
             # 获取数据的发送终端地址以及收到的数据
+
             self.recv_msg, self.client_addr = self.server.recvfrom(BUFSIZE)
 
             localtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
             # 存储信息
             self.sql_saving(localtime, self.recv_msg)
-            print(str(self.recv_msg, 'utf-8'))  # test
+            # print(str(self.recv_msg, 'utf-8'))  # test
 
         self.server.close()
 
